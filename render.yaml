@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: promt-bot
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: GUILD_ID
+        sync: false
+      - key: CLIENT_ID
+        sync: false
+      - key: PORT
+        value: 3000
