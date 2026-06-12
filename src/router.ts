@@ -229,13 +229,14 @@ export async function routeButton(interaction: any) {
   }
 
   if (id === 'ticket_select_salon') {
+    await interaction.deferReply({ ephemeral: true });
     const { storage } = await import('./utils/storage');
     const salonId = interaction.values[0];
     const salon = interaction.guild.channels.cache.get(salonId) as any;
-    if (!salon?.send) { await interaction.reply({ content: 'Salon invalide.', ephemeral: true }); return; }
+    if (!salon?.send) { await interaction.editReply({ content: 'Salon invalide.' }); return; }
     const panels = storage.getPanels(interaction.guild.id);
     const panel = panels[0];
-    if (!panel) { await interaction.reply({ content: 'Aucun panel.', ephemeral: true }); return; }
+    if (!panel) { await interaction.editReply({ content: 'Aucun panel.' }); return; }
     const tickets = storage.getTickets(interaction.guild.id);
     const ouverts = tickets.filter((t: any) => t.statut === 'ouvert').length;
     const fermes = tickets.filter((t: any) => t.statut === 'ferme').length;
@@ -253,28 +254,34 @@ export async function routeButton(interaction: any) {
       )
       .setTimestamp();
     if (panel.logoUrl) embed.setThumbnail(panel.logoUrl);
-    const select = new StringSelectMenuBuilder().setCustomId(`ticket_open_${panel.id}`).setPlaceholder('Selectionnez un motif').addOptions(panel.motifs.map((m: any) => new StringSelectMenuOptionBuilder().setLabel(m.nom).setValue(m.id).setEmoji(m.emoji)));
-    const msg = await salon.send({ embeds: [embed], components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)] });
-    storage.updatePanel(interaction.guild.id, panel.id, { messageId: msg.id, channelId: salonId });
-    await interaction.reply({ content: `Panel envoye dans ${salon}.`, ephemeral: true });
+    if (panel.motifs.length > 0) {
+      const select = new StringSelectMenuBuilder().setCustomId(`ticket_open_${panel.id}`).setPlaceholder('Selectionnez un motif').addOptions(panel.motifs.map((m: any) => new StringSelectMenuOptionBuilder().setLabel(m.nom).setValue(m.id).setEmoji(m.emoji)));
+      const msg = await salon.send({ embeds: [embed], components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)] });
+      storage.updatePanel(interaction.guild.id, panel.id, { messageId: msg.id, channelId: salonId });
+    } else {
+      const msg = await salon.send({ embeds: [embed] });
+      storage.updatePanel(interaction.guild.id, panel.id, { messageId: msg.id, channelId: salonId });
+    }
+    await interaction.editReply({ content: `Panel envoye dans ${salon}.` });
     return;
   }
 
   // ====== TICKET OPEN (menu deroulant) ======
   if (id.startsWith('ticket_open_')) {
+    await interaction.deferReply({ ephemeral: true });
     const { storage } = await import('./utils/storage');
     const { v4: uuidv4 } = await import('uuid');
     const panelId = id.replace('ticket_open_', '');
     const panel = storage.getPanel(interaction.guild.id, panelId);
-    if (!panel) { await interaction.reply({ content: 'Panel introuvable.', ephemeral: true }); return; }
+    if (!panel) { await interaction.editReply({ content: 'Panel introuvable.' }); return; }
     const motifId = interaction.values[0];
     const motif = panel.motifs.find((m: any) => m.id === motifId);
-    if (!motif) { await interaction.reply({ content: 'Motif introuvable.', ephemeral: true }); return; }
+    if (!motif) { await interaction.editReply({ content: 'Motif introuvable.' }); return; }
     const tickets = storage.getTickets(interaction.guild.id);
     const nombre = tickets.length + 1;
     const nomSalon = motif.formatNomSalon.replace(/{nombre}/g, String(nombre).padStart(3, '0')).replace(/{utilisateur}/g, interaction.user.username).replace(/{motif}/g, motif.nom);
     const categorie = interaction.guild.channels.cache.get(motif.categorieId) as any;
-    if (!categorie) { await interaction.reply({ content: 'Categorie introuvable.', ephemeral: true }); return; }
+    if (!categorie) { await interaction.editReply({ content: 'Categorie introuvable.' }); return; }
     const salon = await interaction.guild.channels.create({ name: nomSalon, type: 0, parent: motif.categorieId, permissionOverwrites: [{ id: interaction.guild.id, deny: ['ViewChannel'] }, { id: interaction.user.id, allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory'] }] });
     const ticketId = uuidv4();
     storage.createTicket(interaction.guild.id, { id: ticketId, guildId: interaction.guild.id, channelId: salon.id, categorieId: motif.categorieId, panelId: panel.id, createurId: interaction.user.id, membreIds: [interaction.user.id], statut: 'ouvert', priorite: 'normale', sujet: motif.nom, formulaireId: null, reponsesFormulaire: [], dateCreation: Date.now(), dateFermeture: null, fermePar: null, transcriptId: null, categoryName: motif.nom });
@@ -283,7 +290,7 @@ export async function routeButton(interaction: any) {
     const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = await import('discord.js');
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId(`ticket_close_${salon.id}`).setLabel('Fermer le ticket').setStyle(ButtonStyle.Danger));
     await salon.send({ content: msg + (motif.pingRoleId ? ` <@&${motif.pingRoleId}>` : ''), components: [row] });
-    await interaction.reply({ content: `Ticket ouvert: ${salon}`, ephemeral: true });
+    await interaction.editReply({ content: `Ticket ouvert: ${salon}` });
     return;
   }
 
