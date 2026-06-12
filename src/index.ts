@@ -55,7 +55,7 @@ async function initialize() {
       try {
         if (interaction.isChatInputCommand()) {
           await commandHandler.handleCommand(interaction);
-        } else if (interaction.isButton()) {
+        } else if (interaction.isButton() || interaction.isStringSelectMenu()) {
           await routeButton(interaction);
         } else if (interaction.isModalSubmit()) {
           // Aeroport modals
