@@ -221,6 +221,15 @@ export async function routeButton(interaction: any) {
   }
 
   if (id === 'ticket_cfg_envoyer') {
+    const { storage } = await import('./utils/storage');
+    const panels = storage.getPanels(interaction.guild.id);
+    const panel = panels[0];
+    if (!panel) { await interaction.reply({ content: 'Aucun panel configure. Ajoutez d\'abord un motif avec le bouton **➕ Ajouter motif**.', ephemeral: true }); return; }
+    const manque: string[] = [];
+    if (!panel.titre) manque.push('📝 Titre');
+    if (!panel.description) manque.push('📄 Description');
+    if (panel.motifs.length === 0) manque.push('➕ Motif (au moins 1)');
+    if (manque.length > 0) { await interaction.reply({ content: `❌ **Impossible d'envoyer le panel.**\n\n**Il manque :**\n${manque.map(m => `• ${m}`).join('\n')}\n\nConfigure d'abord ces elements avec les boutons ci-dessus.`, ephemeral: true }); return; }
     const channels = interaction.guild.channels.cache.filter((c: any) => c.type === 0).map((c: any) => new StringSelectMenuOptionBuilder().setLabel(c.name).setValue(c.id)).slice(0, 25);
     if (channels.length === 0) { await interaction.reply({ content: 'Aucun salon textuel.', ephemeral: true }); return; }
     const select = new StringSelectMenuBuilder().setCustomId('ticket_select_salon').setPlaceholder('Choisir le salon du panel').addOptions(channels);
@@ -229,7 +238,7 @@ export async function routeButton(interaction: any) {
   }
 
   if (id === 'ticket_select_salon') {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferUpdate();
     const { storage } = await import('./utils/storage');
     const salonId = interaction.values[0];
     const salon = interaction.guild.channels.cache.get(salonId) as any;
