@@ -8,7 +8,7 @@ export default {
 
   async execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guild) return;
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: 64 });
 
     try {
       const titre = interaction.options.getString('titre', true);

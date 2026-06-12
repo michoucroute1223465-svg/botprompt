@@ -12,7 +12,7 @@ export default {
     const sub = interaction.options.getSubcommand();
 
     if (sub === 'configurer') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: 64 });
       const salon = interaction.options.getChannel('salon', true);
       const msgArrivee = interaction.options.getString('message-arrivée') || '{utilisateur} a rejoint le vocal.';
       const msgDepart = interaction.options.getString('message-départ') || '{utilisateur} a quitté le vocal.';

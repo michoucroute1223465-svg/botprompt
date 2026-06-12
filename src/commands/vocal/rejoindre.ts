@@ -12,11 +12,11 @@ export default {
 
     const channel = interaction.options.getChannel('salon', true);
     if (channel.type !== ChannelType.GuildVoice) {
-      await interaction.reply({ content: '❌ Le salon doit être un salon vocal.', ephemeral: true });
+      await interaction.reply({ content: '❌ Le salon doit être un salon vocal.', flags: 64 });
       return;
     }
 
-    await interaction.reply({ content: `✅ Connecté au salon vocal ${channel}.`, ephemeral: true });
+    await interaction.reply({ content: `✅ Connecté au salon vocal ${channel}.`, flags: 64 });
     logger.info(`Rejoint le vocal: ${channel.name}`, 'Vocal');
   }
 };

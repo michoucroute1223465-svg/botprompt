@@ -28,7 +28,7 @@ export async function routeInteraction(interaction: ButtonInteraction | ChatInpu
   } catch (error) {
     logger.error(`Erreur router: ${error}`, 'Router');
     if (interaction.isRepliable()) {
-      await interaction.reply({ content: 'Une erreur est survenue.', ephemeral: true }).catch(() => {});
+      await interaction.reply({ content: 'Une erreur est survenue.', flags: 64 }).catch(() => {});
     }
   }
 }
@@ -75,7 +75,7 @@ async function routeCommand(interaction: ChatInputCommandInteraction) {
       break;
 
     default:
-      await interaction.reply({ content: 'Commande inconnue. Utilisez /menu', ephemeral: true });
+      await interaction.reply({ content: 'Commande inconnue. Utilisez /menu', flags: 64 });
   }
 }
 
@@ -94,10 +94,9 @@ async function routeButton(interaction: ButtonInteraction) {
     return;
   }
 
-  // Ticket
+  // Ticket - géré par router.ts
+  // Interaction gérée via le routeur principal
   if (id.startsWith('ticket_')) {
-    const { handleTicketButton } = await import('../commands/ticket/ticketActions');
-    await handleTicketButton(interaction);
     return;
   }
 }
@@ -156,7 +155,7 @@ async function handleMainMenuButton(interaction: ButtonInteraction) {
       await interaction.update(createMainMenu(interaction.guild.name, 'Promt Bot'));
       break;
     default:
-      await interaction.reply({ content: 'Bouton inconnu.', ephemeral: true });
+      await interaction.reply({ content: 'Bouton inconnu.', flags: 64 });
   }
 }
 

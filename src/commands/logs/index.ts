@@ -12,7 +12,7 @@ export default {
     const sub = interaction.options.getSubcommand();
 
     if (sub === 'configurer') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: 64 });
       const salon = interaction.options.getChannel('salon', true);
       const typesStr = interaction.options.getString('types', true);
       const types = typesStr.split(',').map(t => t.trim()) as any[];
@@ -29,7 +29,7 @@ export default {
     else if (sub === 'voir') {
       const config = storage.getLogConfig(interaction.guild.id);
       if (!config) {
-        await interaction.reply({ content: '❌ Aucune configuration de logs trouvée.', ephemeral: true });
+        await interaction.reply({ content: '❌ Aucune configuration de logs trouvée.', flags: 64 });
         return;
       }
 
@@ -42,7 +42,7 @@ export default {
         )
         .setTimestamp();
 
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], flags: 64 });
     }
   }
 };

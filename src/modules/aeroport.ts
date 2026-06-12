@@ -59,12 +59,12 @@ export async function handleAeroportButton(interaction: ButtonInteraction) {
   if (customId === 'aeroport_arrivee') {
     await interaction.reply({
       content: 'Utilisez la commande: /aeroport-config salon:[salon] message:[message]',
-      ephemeral: true
+      flags: 64
     });
   } else if (customId === 'aeroport_depart') {
     await interaction.reply({
       content: 'Utilisez la commande: /aeroport-config depart salon:[salon] message:[message]',
-      ephemeral: true
+      flags: 64
     });
   } else if (customId === 'aeroport_toggle') {
     const config = storage.getAeroportConfig(interaction.guild.id);
@@ -78,7 +78,7 @@ export async function handleAeroportButton(interaction: ButtonInteraction) {
 
 export async function handleAeroportConfig(interaction: ChatInputCommandInteraction) {
   if (!interaction.guild) return;
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: 64 });
 
   if (interaction.options.getSubcommand() === 'arrivee') {
     const salon = interaction.options.getChannel('salon', true);

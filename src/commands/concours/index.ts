@@ -22,7 +22,7 @@ export default {
 
 async function createConcours(interaction: ChatInputCommandInteraction) {
   if (!interaction.guild) return;
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: 64 });
 
   const titre = interaction.options.getString('titre', true);
   const lot = interaction.options.getString('lot', true);
@@ -75,13 +75,13 @@ async function endConcours(interaction: ChatInputCommandInteraction) {
   const concours = storage.getConcoursById(interaction.guild.id, id);
 
   if (!concours) {
-    await interaction.reply({ content: '❌ Concours introuvable.', ephemeral: true });
+    await interaction.reply({ content: '❌ Concours introuvable.', flags: 64 });
     return;
   }
 
   const participants = concours.participants;
   if (participants.length === 0) {
-    await interaction.reply({ content: '❌ Aucun participant.', ephemeral: true });
+    await interaction.reply({ content: '❌ Aucun participant.', flags: 64 });
     return;
   }
 
@@ -116,13 +116,13 @@ async function rerollConcours(interaction: ChatInputCommandInteraction) {
   const concours = storage.getConcoursById(interaction.guild.id, id);
 
   if (!concours || !concours.termine) {
-    await interaction.reply({ content: '❌ Concours introuvable ou pas encore terminé.', ephemeral: true });
+    await interaction.reply({ content: '❌ Concours introuvable ou pas encore terminé.', flags: 64 });
     return;
   }
 
   const participants = concours.participants.filter(p => !concours.gagnants.includes(p));
   if (participants.length === 0) {
-    await interaction.reply({ content: '❌ Aucun nouveau participant disponible.', ephemeral: true });
+    await interaction.reply({ content: '❌ Aucun nouveau participant disponible.', flags: 64 });
     return;
   }
 

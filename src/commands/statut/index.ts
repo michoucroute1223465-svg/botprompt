@@ -9,7 +9,7 @@ export default {
   async execute(interaction: ChatInputCommandInteraction) {
     const type = interaction.options.getString('type', true) as 'online' | 'idle' | 'dnd' | 'invisible';
     interaction.client.user?.setStatus(type);
-    await interaction.reply({ content: `✅ Statut changé en **${type}**.`, ephemeral: true });
+    await interaction.reply({ content: `✅ Statut changé en **${type}**.`, flags: 64 });
     logger.info(`Statut changé: ${type}`, 'Statut');
   }
 };

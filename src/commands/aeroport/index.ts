@@ -12,7 +12,7 @@ export default {
     const sub = interaction.options.getSubcommand();
 
     if (sub === 'arrivée') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: 64 });
       const salon = interaction.options.getChannel('salon', true);
       const message = interaction.options.getString('message') || 'Bienvenue {utilisateur} sur {serveur} ! ({membres} membres)';
       
@@ -25,7 +25,7 @@ export default {
       await interaction.editReply({ content: `✅ Salon d'arrivée configuré: ${salon}` });
     } 
     else if (sub === 'départ') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: 64 });
       const salon = interaction.options.getChannel('salon', true);
       const message = interaction.options.getString('message') || '{utilisateur} nous a quitté.';
       
@@ -50,7 +50,7 @@ export default {
           { name: '⚡ Actif', value: config.actif ? '✅ Oui' : '❌ Non', inline: true }
         )
         .setTimestamp();
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], flags: 64 });
     }
   }
 };

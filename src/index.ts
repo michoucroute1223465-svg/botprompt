@@ -66,7 +66,7 @@ async function initialize() {
             const config = storage.getAeroportConfig(interaction.guildId!);
             config.salonArriveeId = salonId; config.messageArrivee = msg; config.actif = true;
             storage.saveAeroportConfig(interaction.guildId!, config);
-            await interaction.reply({ content: `Arrivee configuree dans <#${salonId}>.`, ephemeral: true });
+            await interaction.reply({ content: `Arrivee configuree dans <#${salonId}>.`, flags: 64 });
           } else if (interaction.customId.startsWith('aeroport_depart_')) {
             const salonId = interaction.customId.replace('aeroport_depart_', '');
             const msg = interaction.fields.getTextInputValue('message');
@@ -74,7 +74,7 @@ async function initialize() {
             const config = storage.getAeroportConfig(interaction.guildId!);
             config.salonDepartId = salonId; config.messageDepart = msg; config.actif = true;
             storage.saveAeroportConfig(interaction.guildId!, config);
-            await interaction.reply({ content: `Depart configure dans <#${salonId}>.`, ephemeral: true });
+            await interaction.reply({ content: `Depart configure dans <#${salonId}>.`, flags: 64 });
           } else if (interaction.customId === 'ticket_modal_titre') {
             const titre = interaction.fields.getTextInputValue('titre');
             const { storage } = await import('./utils/storage');
@@ -83,19 +83,19 @@ async function initialize() {
             let panel = panels[0];
             if (!panel) { panel = { id: uuidv4(), guildId: interaction.guildId!, nom: 'Panel', messageId: null, channelId: null, titre, description: '', emoji: '🎫', logoUrl: null, couleur: '#5865f2', motifs: [], dateCreation: Date.now() }; storage.createPanel(interaction.guildId!, panel); }
             else { storage.updatePanel(interaction.guildId!, panel.id, { titre }); }
-            await interaction.reply({ content: `Titre change en "${titre}".`, ephemeral: true });
+            await interaction.reply({ content: `Titre change en "${titre}".`, flags: 64 });
           } else if (interaction.customId === 'ticket_modal_logo') {
             const logo = interaction.fields.getTextInputValue('logo');
             const { storage } = await import('./utils/storage');
             const panels = storage.getPanels(interaction.guildId!);
             if (panels[0]) { storage.updatePanel(interaction.guildId!, panels[0].id, { logoUrl: logo }); }
-            await interaction.reply({ content: `Logo mis a jour.`, ephemeral: true });
+            await interaction.reply({ content: `Logo mis a jour.`, flags: 64 });
           } else if (interaction.customId === 'ticket_modal_description') {
             const desc = interaction.fields.getTextInputValue('description');
             const { storage } = await import('./utils/storage');
             const panels = storage.getPanels(interaction.guildId!);
             if (panels[0]) { storage.updatePanel(interaction.guildId!, panels[0].id, { description: desc }); }
-            await interaction.reply({ content: `Description mise a jour.`, ephemeral: true });
+            await interaction.reply({ content: `Description mise a jour.`, flags: 64 });
           } else if (interaction.customId === 'ticket_modal_motif') {
             const { storage } = await import('./utils/storage');
             const { v4: uuidv4 } = await import('uuid');
@@ -105,7 +105,7 @@ async function initialize() {
             const motif = { id: uuidv4(), nom: interaction.fields.getTextInputValue('nom'), emoji: interaction.fields.getTextInputValue('emoji'), messageOuverture: interaction.fields.getTextInputValue('message'), pingRoleId: interaction.fields.getTextInputValue('ping') || null, categorieId: interaction.fields.getTextInputValue('categorie'), formatNomSalon: 'ticket-{nombre}' };
             panel.motifs.push(motif);
             storage.updatePanel(interaction.guildId!, panel.id, { motifs: panel.motifs });
-            await interaction.reply({ content: `Motif "${motif.nom}" ajoute.`, ephemeral: true });
+            await interaction.reply({ content: `Motif "${motif.nom}" ajoute.`, flags: 64 });
           }
         }
       } catch (e) {

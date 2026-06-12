@@ -20,7 +20,7 @@ class CommandHandler {
   async handleCommand(interaction: ChatInputCommandInteraction): Promise<void> {
     const command = this.commands.get(interaction.commandName);
     if (!command) {
-      await interaction.reply({ content: 'Commande inconnue.', ephemeral: true });
+      await interaction.reply({ content: 'Commande inconnue.', flags: 64 });
       return;
     }
     try {
@@ -28,9 +28,9 @@ class CommandHandler {
     } catch (error) {
       logger.error(`Erreur /${interaction.commandName}: ${error}`, 'Commands');
       if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({ content: 'Erreur lors de l\'execution.', ephemeral: true });
+        await interaction.followUp({ content: 'Erreur lors de l\'execution.', flags: 64 });
       } else {
-        await interaction.reply({ content: 'Erreur lors de l\'execution.', ephemeral: true });
+        await interaction.reply({ content: 'Erreur lors de l\'execution.', flags: 64 });
       }
     }
   }

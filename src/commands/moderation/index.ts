@@ -22,7 +22,7 @@ export default {
       const sanctions = storage.getSanctionsByUser(interaction.guild.id, user.id);
 
       if (sanctions.length === 0) {
-        await interaction.reply({ content: `✅ ${user.tag} n'a aucune sanction.`, ephemeral: true });
+        await interaction.reply({ content: `✅ ${user.tag} n'a aucune sanction.`, flags: 64 });
         return;
       }
 
@@ -36,7 +36,7 @@ export default {
         }).join('\n\n'))
         .setTimestamp();
 
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], flags: 64 });
     }
   }
 };

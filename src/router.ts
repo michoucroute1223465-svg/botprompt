@@ -179,11 +179,11 @@ export async function routeButton(interaction: any) {
     const concoursId = id.replace('concours_', '');
     const { storage } = await import('./utils/storage');
     const c = storage.getConcoursById(interaction.guild.id, concoursId);
-    if (!c || !c.actif) { await interaction.reply({ content: 'Concours termine ou inexistant.', ephemeral: true }); return; }
-    if (c.participants.includes(interaction.user.id)) { await interaction.reply({ content: 'Vous participez deja.', ephemeral: true }); return; }
+    if (!c || !c.actif) { await interaction.reply({ content: 'Concours termine ou inexistant.', flags: 64 }); return; }
+    if (c.participants.includes(interaction.user.id)) { await interaction.reply({ content: 'Vous participez deja.', flags: 64 }); return; }
     c.participants.push(interaction.user.id);
     storage.updateConcours(interaction.guild.id, concoursId, { participants: c.participants });
-    await interaction.reply({ content: 'Participation enregistree.', ephemeral: true });
+    await interaction.reply({ content: 'Participation enregistree.', flags: 64 });
     return;
   }
 
@@ -224,16 +224,16 @@ export async function routeButton(interaction: any) {
     const { storage } = await import('./utils/storage');
     const panels = storage.getPanels(interaction.guild.id);
     const panel = panels[0];
-    if (!panel) { await interaction.reply({ content: 'Aucun panel configure. Ajoutez d\'abord un motif avec le bouton **➕ Ajouter motif**.', ephemeral: true }); return; }
+    if (!panel) { await interaction.reply({ content: 'Aucun panel configure. Ajoutez d\'abord un motif avec le bouton **➕ Ajouter motif**.', flags: 64 }); return; }
     const manque: string[] = [];
     if (!panel.titre) manque.push('📝 Titre');
     if (!panel.description) manque.push('📄 Description');
     if (panel.motifs.length === 0) manque.push('➕ Motif (au moins 1)');
-    if (manque.length > 0) { await interaction.reply({ content: `❌ **Impossible d'envoyer le panel.**\n\n**Il manque :**\n${manque.map(m => `• ${m}`).join('\n')}\n\nConfigure d'abord ces elements avec les boutons ci-dessus.`, ephemeral: true }); return; }
+    if (manque.length > 0) { await interaction.reply({ content: `❌ **Impossible d'envoyer le panel.**\n\n**Il manque :**\n${manque.map(m => `• ${m}`).join('\n')}\n\nConfigure d'abord ces elements avec les boutons ci-dessus.`, flags: 64 }); return; }
     const channels = interaction.guild.channels.cache.filter((c: any) => c.type === 0).map((c: any) => new StringSelectMenuOptionBuilder().setLabel(c.name).setValue(c.id)).slice(0, 25);
-    if (channels.length === 0) { await interaction.reply({ content: 'Aucun salon textuel.', ephemeral: true }); return; }
+    if (channels.length === 0) { await interaction.reply({ content: 'Aucun salon textuel.', flags: 64 }); return; }
     const select = new StringSelectMenuBuilder().setCustomId('ticket_select_salon').setPlaceholder('Choisir le salon du panel').addOptions(channels);
-    await interaction.reply({ components: [new ActionRowBuilder().addComponents(select)], ephemeral: true });
+    await interaction.reply({ components: [new ActionRowBuilder().addComponents(select)], flags: 64 });
     return;
   }
 
@@ -242,10 +242,10 @@ export async function routeButton(interaction: any) {
     await interaction.update({ content: 'Envoi du panel en cours...', components: [] });
     const { storage } = await import('./utils/storage');
     const salon = interaction.guild.channels.cache.get(salonId) as any;
-    if (!salon?.send) { await interaction.followUp({ content: 'Salon invalide.', ephemeral: true }); return; }
+    if (!salon?.send) { await interaction.followUp({ content: 'Salon invalide.', flags: 64 }); return; }
     const panels = storage.getPanels(interaction.guild.id);
     const panel = panels[0];
-    if (!panel) { await interaction.followUp({ content: 'Aucun panel.', ephemeral: true }); return; }
+    if (!panel) { await interaction.followUp({ content: 'Aucun panel.', flags: 64 }); return; }
     const tickets = storage.getTickets(interaction.guild.id);
     const ouverts = tickets.filter((t: any) => t.statut === 'ouvert').length;
     const fermes = tickets.filter((t: any) => t.statut === 'ferme').length;
@@ -272,16 +272,16 @@ export async function routeButton(interaction: any) {
         msg = await salon.send({ embeds: [embed] });
       }
       storage.updatePanel(interaction.guild.id, panel.id, { messageId: msg.id, channelId: salonId });
-      await interaction.followUp({ content: `✅ Panel envoye dans ${salon}.`, ephemeral: true });
+      await interaction.followUp({ content: `✅ Panel envoye dans ${salon}.`, flags: 64 });
     } catch (e) {
-      await interaction.followUp({ content: `❌ Erreur envoi : ${e}`, ephemeral: true });
+      await interaction.followUp({ content: `❌ Erreur envoi : ${e}`, flags: 64 });
     }
     return;
   }
 
   // ====== TICKET OPEN (menu deroulant) ======
   if (id.startsWith('ticket_open_')) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: 64 });
     const { storage } = await import('./utils/storage');
     const { v4: uuidv4 } = await import('uuid');
     const panelId = id.replace('ticket_open_', '');
@@ -312,7 +312,7 @@ export async function routeButton(interaction: any) {
     const { storage } = await import('./utils/storage');
     const channelId = id.replace('ticket_close_', '');
     const ticket = storage.getTicket(interaction.guild.id, channelId);
-    if (!ticket) { await interaction.reply({ content: 'Ce salon n\'est pas un ticket.', ephemeral: true }); return; }
+    if (!ticket) { await interaction.reply({ content: 'Ce salon n\'est pas un ticket.', flags: 64 }); return; }
     storage.updateTicket(interaction.guild.id, channelId, { statut: 'ferme', dateFermeture: Date.now() });
     const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = await import('discord.js');
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId(`ticket_delete_${channelId}`).setLabel('Supprimer').setStyle(ButtonStyle.Danger), new ButtonBuilder().setCustomId(`ticket_reopen_${channelId}`).setLabel('Reouvrir').setStyle(ButtonStyle.Success));
@@ -335,7 +335,7 @@ export async function routeButton(interaction: any) {
     const { storage } = await import('./utils/storage');
     const channelId = id.replace('ticket_reopen_', '');
     const ticket = storage.getTicket(interaction.guild.id, channelId);
-    if (!ticket) { await interaction.reply({ content: 'Ticket introuvable.', ephemeral: true }); return; }
+    if (!ticket) { await interaction.reply({ content: 'Ticket introuvable.', flags: 64 }); return; }
     storage.updateTicket(interaction.guild.id, channelId, { statut: 'ouvert', dateFermeture: null });
     await interaction.reply({ content: 'Ticket reouvert.' });
     return;

@@ -18,7 +18,7 @@ export default {
     };
 
     interaction.client.user?.setActivity(nom, { type: activityTypeMap[type] });
-    await interaction.reply({ content: `✅ Activité changée: **${type} ${nom}**.`, ephemeral: true });
+    await interaction.reply({ content: `✅ Activité changée: **${type} ${nom}**.`, flags: 64 });
     logger.info(`Activité changée: ${type} ${nom}`, 'Statut');
   }
 };

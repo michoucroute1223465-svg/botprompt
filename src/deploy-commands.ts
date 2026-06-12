@@ -6,7 +6,6 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 const ADMIN = PermissionFlagsBits.Administrator;
 
 const commands = [
-  // Generales (publiques)
   new SlashCommandBuilder().setName('menu').setDescription('Menu interactif'),
   new SlashCommandBuilder().setName('ping').setDescription('Latence'),
   new SlashCommandBuilder().setName('aide').setDescription('Liste des commandes'),
@@ -59,11 +58,8 @@ const commands = [
   // Auto-role (admin)
   new SlashCommandBuilder().setName('role-message').setDescription('Auto-role').setDefaultMemberPermissions(ADMIN).addStringOption(o => o.setName('titre').setDescription('Titre').setRequired(true)).addStringOption(o => o.setName('roles').setDescription('ID:Label,ID:Label').setRequired(true)),
 
-  // Sauvegarde (admin)
   new SlashCommandBuilder().setName('sauvegarde').setDescription('Sauvegarder serveur').setDefaultMemberPermissions(ADMIN),
-  // Nuke (admin)
   new SlashCommandBuilder().setName('nuke').setDescription('Recreer le salon').setDefaultMemberPermissions(ADMIN),
-  // Server-banner (admin)
   new SlashCommandBuilder().setName('server-banner').setDescription('Changer banniere').setDefaultMemberPermissions(ADMIN).addStringOption(o => o.setName('url').setDescription('URL image').setRequired(true)),
 
   // Ticket (admin)

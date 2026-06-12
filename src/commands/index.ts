@@ -121,51 +121,51 @@ function saveSanction(guildId: string, type: string, userId: string, modId: stri
 
 const modCmds = [
   { name: 'bannir', fn: async (i: ChatInputCommandInteraction) => {
-    if (!i.guild) return; await i.deferReply({ ephemeral: true }); const user = i.options.getUser('utilisateur', true); const raison = i.options.getString('raison', true);
+    if (!i.guild) return; await i.deferReply({ flags: 64 }); const user = i.options.getUser('utilisateur', true); const raison = i.options.getString('raison', true);
     const m = await i.guild.members.fetch(user.id).catch(() => null); if (m && !m.bannable) { await i.editReply({ content: 'Impossible.' }); return; }
     await i.guild.members.ban(user.id, { reason: raison, deleteMessageSeconds: (i.options.getInteger('messages') || 0) * 86400 });
     saveSanction(i.guild.id, 'ban', user.id, i.user.id, raison); await i.editReply({ content: `${user.tag} banni. Raison: ${raison}` });
     try { await user.send({ content: `Banni de **${i.guild.name}**\nRaison: ${raison}\nPar: ${i.user.tag}` }); } catch {}
   }},
   { name: 'debannir', fn: async (i: ChatInputCommandInteraction) => {
-    if (!i.guild) return; await i.deferReply({ ephemeral: true }); await i.guild.members.unban(i.options.getString('utilisateur-id', true), i.options.getString('raison', true));
+    if (!i.guild) return; await i.deferReply({ flags: 64 }); await i.guild.members.unban(i.options.getString('utilisateur-id', true), i.options.getString('raison', true));
     await i.editReply({ content: 'Utilisateur debanni.' });
   }},
   { name: 'expulser', fn: async (i: ChatInputCommandInteraction) => {
-    if (!i.guild) return; await i.deferReply({ ephemeral: true }); const user = i.options.getUser('utilisateur', true); const m = await i.guild.members.fetch(user.id).catch(() => null);
+    if (!i.guild) return; await i.deferReply({ flags: 64 }); const user = i.options.getUser('utilisateur', true); const m = await i.guild.members.fetch(user.id).catch(() => null);
     if (!m?.kickable) { await i.editReply({ content: 'Impossible.' }); return; } await m.kick(i.options.getString('raison', true)); saveSanction(i.guild.id, 'kick', user.id, i.user.id, i.options.getString('raison', true));
     await i.editReply({ content: `${user.tag} expulse.` });
   }},
   { name: 'mute', fn: async (i: ChatInputCommandInteraction) => {
-    if (!i.guild) return; await i.deferReply({ ephemeral: true }); const user = i.options.getUser('utilisateur', true); const duree = i.options.getInteger('duree', true);
+    if (!i.guild) return; await i.deferReply({ flags: 64 }); const user = i.options.getUser('utilisateur', true); const duree = i.options.getInteger('duree', true);
     const m = await i.guild.members.fetch(user.id).catch(() => null); if (!m?.moderatable) { await i.editReply({ content: 'Impossible.' }); return; }
     await m.timeout(duree * 60000, i.options.getString('raison', true)); saveSanction(i.guild.id, 'mute', user.id, i.user.id, i.options.getString('raison', true), duree * 60000);
     await i.editReply({ content: `${user.tag} mute ${duree}min.` });
   }},
   { name: 'unmute', fn: async (i: ChatInputCommandInteraction) => {
-    if (!i.guild) return; await i.deferReply({ ephemeral: true }); const user = i.options.getUser('utilisateur', true);
+    if (!i.guild) return; await i.deferReply({ flags: 64 }); const user = i.options.getUser('utilisateur', true);
     const m = await i.guild.members.fetch(user.id).catch(() => null); if (!m) { await i.editReply({ content: 'Introuvable.' }); return; }
     await m.timeout(null, i.options.getString('raison', true)); await i.editReply({ content: `${user.tag} unmute.` });
   }},
   { name: 'avertir', fn: async (i: ChatInputCommandInteraction) => {
-    if (!i.guild) return; await i.deferReply({ ephemeral: true }); const user = i.options.getUser('utilisateur', true); saveSanction(i.guild.id, 'warn', user.id, i.user.id, i.options.getString('raison', true));
+    if (!i.guild) return; await i.deferReply({ flags: 64 }); const user = i.options.getUser('utilisateur', true); saveSanction(i.guild.id, 'warn', user.id, i.user.id, i.options.getString('raison', true));
     await i.editReply({ content: `${user.tag} averti.` });
   }},
   { name: 'desavertir', fn: async (i: ChatInputCommandInteraction) => {
     if (!i.guild) return; const id = i.options.getString('sanction-id', true); const s = storage.getSanctionById(i.guild.id, id);
-    if (!s) { await i.reply({ content: 'Introuvable.', ephemeral: true }); return; } storage.updateSanction(i.guild.id, id, { actif: false }); await i.reply({ content: 'Retire.', ephemeral: true });
+    if (!s) { await i.reply({ content: 'Introuvable.', flags: 64 }); return; } storage.updateSanction(i.guild.id, id, { actif: false }); await i.reply({ content: 'Retire.', flags: 64 });
   }}
 ];
 
 // ====== STATUT / ACTIVITE ======
-commandHandler.register({ data: { name: 'statut' }, async execute(i) { i.client.user?.setStatus(i.options.getString('type', true) as any); await i.reply({ content: `Statut: ${i.options.getString('type', true)}`, ephemeral: true }); }});
-commandHandler.register({ data: { name: 'activite' }, async execute(i) { const map: Record<string, ActivityType> = { 'Playing': ActivityType.Playing, 'Watching': ActivityType.Watching, 'Listening': ActivityType.Listening, 'Streaming': ActivityType.Streaming }; i.client.user?.setActivity(i.options.getString('nom', true), { type: map[i.options.getString('type', true)] }); await i.reply({ content: `Activite changee.`, ephemeral: true }); }});
+commandHandler.register({ data: { name: 'statut' }, async execute(i) { i.client.user?.setStatus(i.options.getString('type', true) as any); await i.reply({ content: `Statut: ${i.options.getString('type', true)}`, flags: 64 }); }});
+commandHandler.register({ data: { name: 'activite' }, async execute(i) { const map: Record<string, ActivityType> = { 'Playing': ActivityType.Playing, 'Watching': ActivityType.Watching, 'Listening': ActivityType.Listening, 'Streaming': ActivityType.Streaming }; i.client.user?.setActivity(i.options.getString('nom', true), { type: map[i.options.getString('type', true)] }); await i.reply({ content: `Activite changee.`, flags: 64 }); }});
 
 // ====== EMBED ======
 commandHandler.register({
   data: { name: 'embed' },
   async execute(i) {
-    if (!i.guild) return; await i.deferReply({ ephemeral: true });
+    if (!i.guild) return; await i.deferReply({ flags: 64 });
     const e = new EmbedBuilder().setColor(parseInt((i.options.getString('couleur') || '#2b2d31').replace('#', ''), 16) || 0x2b2d31).setTitle(i.options.getString('titre', true)).setDescription(i.options.getString('description', true));
     if (i.options.getString('image')) e.setImage(i.options.getString('image')!);
     if (i.options.getString('miniature')) e.setThumbnail(i.options.getString('miniature')!);
@@ -178,7 +178,7 @@ commandHandler.register({
 commandHandler.register({
   data: { name: 'message-planifier' },
   async execute(i) {
-    if (!i.guild) return; await i.deferReply({ ephemeral: true });
+    if (!i.guild) return; await i.deferReply({ flags: 64 });
     const salon = i.options.getChannel('salon', true); const contenu = i.options.getString('contenu', true);
     const freq = i.options.getString('frequence', true) as any; const intervalle = i.options.getInteger('intervalle', true);
     let ms = intervalle * 60000; if (freq === 'heures') ms = intervalle * 3600000; if (freq === 'jours') ms = intervalle * 86400000;
@@ -193,7 +193,7 @@ commandHandler.register({
   async execute(i) {
     if (!i.guild) return; const sub = i.options.getSubcommand();
     if (sub === 'creer') {
-      await i.deferReply({ ephemeral: true }); const titre = i.options.getString('titre', true); const lot = i.options.getString('lot', true);
+      await i.deferReply({ flags: 64 }); const titre = i.options.getString('titre', true); const lot = i.options.getString('lot', true);
       const duree = i.options.getInteger('duree', true); const nb = i.options.getInteger('gagnants', true); const id = uuidv4();
       const btn = new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId(`concours_${id}`).setStyle(ButtonStyle.Success).setLabel('Participer'));
       const e = new EmbedBuilder().setColor(0x2b2d31).setTitle(titre).setDescription(`Lot: ${lot}\nGagnants: ${nb}\nDuree: ${duree} min`).setFooter({ text: `ID: ${id}` }).setTimestamp(Date.now() + duree * 60000);
@@ -201,7 +201,7 @@ commandHandler.register({
       storage.createConcours(i.guild.id, { id, guildId: i.guild.id, channelId: i.channelId!, messageId: msg.id, titre, lot, duree: duree * 60000, nbGagnants: nb, participants: [], dateDebut: Date.now(), dateFin: Date.now() + duree * 60000, actif: true, termine: false, gagnants: [] });
       storage.incrementStats(i.guild.id, 'totalConcours'); await i.editReply({ content: `Concours: ${titre}` });
     } else if (sub === 'terminer') {
-      await i.deferReply({ ephemeral: true }); const c = storage.getConcoursById(i.guild.id, i.options.getString('concours-id', true));
+      await i.deferReply({ flags: 64 }); const c = storage.getConcoursById(i.guild.id, i.options.getString('concours-id', true));
       if (!c) { await i.editReply({ content: 'Introuvable.' }); return; }
       if (c.participants.length < c.nbGagnants) { storage.updateConcours(i.guild.id, c.id, { dateFin: Date.now() + 3600000 }); await i.editReply({ content: `Pas assez de participants. Prolonge d'1h.` }); return; }
       const g: string[] = []; const s = [...c.participants].sort(() => Math.random() - 0.5); for (let j = 0; j < Math.min(c.nbGagnants, s.length); j++) g.push(s[j]);
@@ -218,7 +218,7 @@ commandHandler.register({
   data: { name: 'logs' },
   async execute(i) {
     if (!i.guild) return; if (i.options.getSubcommand() !== 'configurer') return;
-    await i.deferReply({ ephemeral: true });
+    await i.deferReply({ flags: 64 });
     storage.saveLogConfig(i.guild.id, { guildId: i.guild.id, salonId: i.options.getChannel('salon', true).id, types: i.options.getString('types', true).split(',').map((t: string) => t.trim()) as any });
     await i.editReply({ content: `Logs configures.` });
   }
@@ -228,7 +228,7 @@ commandHandler.register({
 commandHandler.register({
   data: { name: 'sondage' },
   async execute(i) {
-    if (!i.guild) return; await i.deferReply({ ephemeral: true });
+    if (!i.guild) return; await i.deferReply({ flags: 64 });
     const q = i.options.getString('question', true); const opts: string[] = [];
     for (let j = 1; j <= 4; j++) { const o = i.options.getString(`option${j}`); if (o) opts.push(o); }
     if (opts.length < 2) { await i.editReply({ content: 'Min 2 options.' }); return; }
@@ -247,7 +247,7 @@ commandHandler.register({
 commandHandler.register({
   data: { name: 'rappeler' },
   async execute(i) {
-    if (!i.guild) return; await i.deferReply({ ephemeral: true });
+    if (!i.guild) return; await i.deferReply({ flags: 64 });
     const user = i.options.getUser('utilisateur', true); const msg = i.options.getString('message', true); const temps = i.options.getInteger('temps', true); const unite = i.options.getString('unite', true) as any;
     let ms = temps * 60000; if (unite === 'heures') ms = temps * 3600000; if (unite === 'jours') ms = temps * 86400000;
     const rappels = storage.readJSON<any[]>(`${__dirname}/../../data/rappels.json`, []);
@@ -260,7 +260,7 @@ commandHandler.register({
 commandHandler.register({
   data: { name: 'filtre' },
   async execute(i) {
-    if (!i.guild) return; await i.deferReply({ ephemeral: true }); const sub = i.options.getSubcommand();
+    if (!i.guild) return; await i.deferReply({ flags: 64 }); const sub = i.options.getSubcommand();
     const filtres = storage.readJSON<Record<string, any>>(`${__dirname}/../../data/filtres.json`, {});
     if (!filtres[i.guild.id]) filtres[i.guild.id] = { mots: [], liens: true, salonsWhitelist: [], slowmode: 0 };
     const f = filtres[i.guild.id];
@@ -278,7 +278,7 @@ commandHandler.register({
 commandHandler.register({
   data: { name: 'role-message' },
   async execute(i) {
-    if (!i.guild) return; await i.deferReply({ ephemeral: true });
+    if (!i.guild) return; await i.deferReply({ flags: 64 });
     const titre = i.options.getString('titre', true); const roles = i.options.getString('roles', true).split(',').map(r => { const [id, label] = r.split(':'); return { id: id.trim(), label: label.trim() }; });
     const select = new StringSelectMenuBuilder().setCustomId('autorole_select').setPlaceholder('Choisissez vos roles').setMinValues(0).setMaxValues(roles.length).addOptions(roles.map(r => new StringSelectMenuOptionBuilder().setLabel(r.label).setValue(r.id)));
     const e = new EmbedBuilder().setColor(0x2b2d31).setTitle(titre).setDescription('Selectionnez vos roles ci-dessous.');
@@ -291,7 +291,7 @@ commandHandler.register({
 commandHandler.register({
   data: { name: 'sauvegarde' },
   async execute(i) {
-    if (!i.guild) return; await i.deferReply({ ephemeral: true });
+    if (!i.guild) return; await i.deferReply({ flags: 64 });
     const fs = await import('fs'); const p = await import('path');
     const sauvegarde = { nom: i.guild.name, id: i.guild.id, date: new Date().toISOString(), roles: i.guild.roles.cache.map(r => ({ id: r.id, nom: r.name, couleur: r.hexColor, pos: r.position })), salons: i.guild.channels.cache.map(c => ({ id: c.id, nom: c.name, type: c.type, parent: c.parentId })) };
     const dir = p.join(__dirname, '../../data/backups'); if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -307,14 +307,14 @@ commandHandler.register({
     if (!i.guild) return;
     const salon = i.options.getChannel('salon', true);
     const voiceChannel = i.guild.channels.cache.get(salon.id);
-    if (!voiceChannel || voiceChannel.type !== 2) { await i.reply({ content: 'Ce n\'est pas un salon vocal.', ephemeral: true }); return; }
+    if (!voiceChannel || voiceChannel.type !== 2) { await i.reply({ content: 'Ce n\'est pas un salon vocal.', flags: 64 }); return; }
       const { joinVoiceChannel, VoiceConnectionStatus, entersState } = await import('@discordjs/voice');
     try {
       const connection = joinVoiceChannel({ channelId: salon.id, guildId: i.guild.id, adapterCreator: i.guild.voiceAdapterCreator as any, selfDeaf: true, selfMute: true });
       await entersState(connection, VoiceConnectionStatus.Ready, 30000);
-      await i.reply({ content: `Connecte dans ${salon}.`, ephemeral: true });
+      await i.reply({ content: `Connecte dans ${salon}.`, flags: 64 });
     } catch (e) {
-      await i.reply({ content: `Erreur: ${e}`, ephemeral: true });
+      await i.reply({ content: `Erreur: ${e}`, flags: 64 });
     }
   }
 });
@@ -324,11 +324,11 @@ commandHandler.register({
   async execute(i) {
     if (!i.guild) return;
     const voice = i.guild.members.me?.voice?.channel;
-    if (!voice) { await i.reply({ content: 'Je ne suis pas dans un salon vocal.', ephemeral: true }); return; }
+    if (!voice) { await i.reply({ content: 'Je ne suis pas dans un salon vocal.', flags: 64 }); return; }
     const { getVoiceConnection } = await import('@discordjs/voice');
     const conn = getVoiceConnection(i.guild.id);
-    if (conn) { conn.destroy(); await i.reply({ content: 'Deconnecte.', ephemeral: true }); }
-    else { await i.reply({ content: 'Aucune connexion.', ephemeral: true }); }
+    if (conn) { conn.destroy(); await i.reply({ content: 'Deconnecte.', flags: 64 }); }
+    else { await i.reply({ content: 'Aucune connexion.', flags: 64 }); }
   }
 });
 
@@ -338,20 +338,20 @@ commandHandler.register({
     if (!i.guild) return;
     const sub = i.options.getSubcommand();
     if (sub === 'configurer') {
-      await i.deferReply({ ephemeral: true });
+      await i.deferReply({ flags: 64 });
       const salon = i.options.getChannel('salon', true);
       const msgArrivee = i.options.getString('message-arrivee') || '{utilisateur} a rejoint le vocal.';
       const msgDepart = i.options.getString('message-depart') || '{utilisateur} a quitte le vocal.';
       storage.saveNotificationVocalConfig(i.guild.id, { guildId: i.guild.id, salonId: salon.id, messageArrivee: msgArrivee, messageDepart: msgDepart, actif: true });
       await i.editReply({ content: `Notification vocale configuree dans ${salon}.` });
     } else if (sub === 'activer') {
-      await i.deferReply({ ephemeral: true });
+      await i.deferReply({ flags: 64 });
       const config = storage.getNotificationVocalConfig(i.guild.id);
       config.actif = true;
       storage.saveNotificationVocalConfig(i.guild.id, config);
       await i.editReply({ content: 'Notification vocale activee.' });
     } else if (sub === 'desactiver') {
-      await i.deferReply({ ephemeral: true });
+      await i.deferReply({ flags: 64 });
       const config = storage.getNotificationVocalConfig(i.guild.id);
       config.actif = false;
       storage.saveNotificationVocalConfig(i.guild.id, config);
@@ -368,7 +368,7 @@ commandHandler.register({
     const user = i.options.getUser('utilisateur', true);
     const sanctions = storage.getSanctionsByUser(i.guild.id, user.id);
     const warns = sanctions.filter(s => s.type === 'warn');
-    if (warns.length === 0) { await i.reply({ content: `${user.tag} n'a aucun avertissement.`, ephemeral: true }); return; }
+    if (warns.length === 0) { await i.reply({ content: `${user.tag} n'a aucun avertissement.`, flags: 64 }); return; }
     const embed = new EmbedBuilder().setColor(0x2b2d31).setTitle(`Avertissements de ${user.tag}`).setDescription(warns.map((w, j) => `**${j + 1}.** ${w.raison} — <@${w.moderateurId}> — ${new Date(w.date).toLocaleString('fr-FR')}`).join('\n'));
     await i.reply({ embeds: [embed] });
   }
@@ -399,7 +399,7 @@ commandHandler.register({
   data: { name: 'clear' },
   async execute(i) {
     if (!i.guild) return;
-    await i.deferReply({ ephemeral: true });
+    await i.deferReply({ flags: 64 });
     const count = i.options.getInteger('nombre', true);
     if (count < 1 || count > 100) { await i.editReply({ content: 'Entre 1 et 100.' }); return; }
     const ch = i.channel as any;
@@ -413,7 +413,7 @@ commandHandler.register({
   data: { name: 'nuke' },
   async execute(i) {
     if (!i.guild) return;
-    await i.deferReply({ ephemeral: true });
+    await i.deferReply({ flags: 64 });
     const ch = i.channel as any;
     const pos = ch.position;
     const newCh = await ch.clone();
@@ -449,7 +449,7 @@ commandHandler.register({
     const guildSnipes = snipes[i.guild.id] || [];
     let filtered = guildSnipes;
     if (user) filtered = guildSnipes.filter(s => s.authorId === user.id);
-    if (filtered.length === 0) { await i.reply({ content: 'Aucun message supprime.', ephemeral: true }); return; }
+    if (filtered.length === 0) { await i.reply({ content: 'Aucun message supprime.', flags: 64 }); return; }
     const last = filtered[filtered.length - 1];
     const embed = new EmbedBuilder().setColor(0x2b2d31).setTitle('Message supprime').setDescription(last.content || '(vide)').addFields({ name: 'Auteur', value: `<@${last.authorId}>`, inline: true }, { name: 'Salon', value: `<#${last.channelId}>`, inline: true });
     await i.reply({ embeds: [embed] });
@@ -479,7 +479,7 @@ commandHandler.register({
   data: { name: 'server-banner' },
   async execute(i) {
     if (!i.guild) return;
-    await i.deferReply({ ephemeral: true });
+    await i.deferReply({ flags: 64 });
     const url = i.options.getString('url', true);
     try {
       await i.guild.setBanner(url);
@@ -534,10 +534,10 @@ commandHandler.register({
         new ButtonBuilder().setCustomId('ticket_cfg_ajouter_motif').setLabel('Ajouter motif').setEmoji('➕').setStyle(ButtonStyle.Success),
         new ButtonBuilder().setCustomId('ticket_cfg_envoyer').setLabel('Envoyer panel').setEmoji('📤').setStyle(ButtonStyle.Primary)
       );
-      await i.reply({ embeds: [embed], components: [row1], ephemeral: true });
+      await i.reply({ embeds: [embed], components: [row1], flags: 64 });
     } else if (sub === 'fermer') {
       const ticket = storage.getTicket(i.guild.id, i.channelId);
-      if (!ticket) { await i.reply({ content: 'Ce salon n\'est pas un ticket.', ephemeral: true }); return; }
+      if (!ticket) { await i.reply({ content: 'Ce salon n\'est pas un ticket.', flags: 64 }); return; }
       storage.updateTicket(i.guild.id, i.channelId, { statut: 'ferme', dateFermeture: Date.now() });
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId(`ticket_delete_${i.channelId}`).setLabel('Supprimer').setStyle(ButtonStyle.Danger), new ButtonBuilder().setCustomId(`ticket_reopen_${i.channelId}`).setLabel('Reouvrir').setStyle(ButtonStyle.Success));
       await i.reply({ content: 'Ticket ferme.', components: [row] });
@@ -547,9 +547,9 @@ commandHandler.register({
       setTimeout(async () => { try { await (i.channel as any)?.delete(); } catch {} }, 2000);
     } else if (sub === 'logs') {
       const tickets = storage.getTickets(i.guild.id).slice(-10).reverse();
-      if (tickets.length === 0) { await i.reply({ content: 'Aucun ticket recent.', ephemeral: true }); return; }
+      if (tickets.length === 0) { await i.reply({ content: 'Aucun ticket recent.', flags: 64 }); return; }
       const embed = new EmbedBuilder().setColor(0x5865f2).setTitle('Derniers tickets').setDescription(tickets.map(t => `**${t.sujet || 'Ticket'}** - <@${t.createurId}> - ${t.statut === 'ouvert' ? 'Ouvert' : 'Ferme'}`).join('\n'));
-      await i.reply({ embeds: [embed], ephemeral: true });
+      await i.reply({ embeds: [embed], flags: 64 });
     }
   }
 });

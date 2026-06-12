@@ -22,7 +22,7 @@ export default {
 
 async function handleAdd(interaction: ChatInputCommandInteraction) {
   if (!interaction.guild) return;
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: 64 });
 
   const salon = interaction.options.getChannel('salon', true);
   const contenu = interaction.options.getString('contenu', true);
@@ -55,12 +55,12 @@ async function handleDelete(interaction: ChatInputCommandInteraction) {
   const messageId = interaction.options.getString('message-id', true);
 
   if (!storage.getMessageProgramme(interaction.guild.id, messageId)) {
-    await interaction.reply({ content: '❌ Message introuvable.', ephemeral: true });
+    await interaction.reply({ content: '❌ Message introuvable.', flags: 64 });
     return;
   }
 
   storage.deleteMessageProgramme(interaction.guild.id, messageId);
-  await interaction.reply({ content: '✅ Message programmé supprimé.', ephemeral: true });
+  await interaction.reply({ content: '✅ Message programmé supprimé.', flags: 64 });
 }
 
 async function handleList(interaction: ChatInputCommandInteraction) {
@@ -68,7 +68,7 @@ async function handleList(interaction: ChatInputCommandInteraction) {
   const messages = storage.getMessagesProgrammes(interaction.guild.id);
 
   if (messages.length === 0) {
-    await interaction.reply({ content: '📭 Aucun message programmé.', ephemeral: true });
+    await interaction.reply({ content: '📭 Aucun message programmé.', flags: 64 });
     return;
   }
 
@@ -80,5 +80,5 @@ async function handleList(interaction: ChatInputCommandInteraction) {
     ).join('\n\n'))
     .setTimestamp();
 
-  await interaction.reply({ embeds: [embed], ephemeral: true });
+  await interaction.reply({ embeds: [embed], flags: 64 });
 }

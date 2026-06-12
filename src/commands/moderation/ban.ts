@@ -15,7 +15,7 @@ export default {
 
   async execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guild) return;
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: 64 });
 
     const user = interaction.options.getUser('utilisateur', true);
     const raison = interaction.options.getString('raison', true);
