@@ -238,15 +238,14 @@ export async function routeButton(interaction: any) {
   }
 
   if (id === 'ticket_select_salon') {
-    const saloncache = interaction.values[0];
-    await interaction.deferUpdate();
+    const salonId = interaction.values[0];
+    await interaction.update({ content: 'Envoi du panel en cours...', components: [] });
     const { storage } = await import('./utils/storage');
-    const salonId = saloncache;
     const salon = interaction.guild.channels.cache.get(salonId) as any;
-    if (!salon?.send) { await interaction.editReply({ content: 'Salon invalide.' }); return; }
+    if (!salon?.send) { await interaction.followUp({ content: 'Salon invalide.', ephemeral: true }); return; }
     const panels = storage.getPanels(interaction.guild.id);
     const panel = panels[0];
-    if (!panel) { await interaction.editReply({ content: 'Aucun panel.' }); return; }
+    if (!panel) { await interaction.followUp({ content: 'Aucun panel.', ephemeral: true }); return; }
     const tickets = storage.getTickets(interaction.guild.id);
     const ouverts = tickets.filter((t: any) => t.statut === 'ouvert').length;
     const fermes = tickets.filter((t: any) => t.statut === 'ferme').length;
@@ -264,15 +263,19 @@ export async function routeButton(interaction: any) {
       )
       .setTimestamp();
     if (panel.logoUrl) embed.setThumbnail(panel.logoUrl);
-    if (panel.motifs.length > 0) {
-      const select = new StringSelectMenuBuilder().setCustomId(`ticket_open_${panel.id}`).setPlaceholder('Selectionnez un motif').addOptions(panel.motifs.map((m: any) => new StringSelectMenuOptionBuilder().setLabel(m.nom).setValue(m.id).setEmoji(m.emoji)));
-      const msg = await salon.send({ embeds: [embed], components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)] });
+    try {
+      let msg;
+      if (panel.motifs.length > 0) {
+        const select = new StringSelectMenuBuilder().setCustomId(`ticket_open_${panel.id}`).setPlaceholder('Selectionnez un motif').addOptions(panel.motifs.map((m: any) => new StringSelectMenuOptionBuilder().setLabel(m.nom).setValue(m.id).setEmoji(m.emoji)));
+        msg = await salon.send({ embeds: [embed], components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)] });
+      } else {
+        msg = await salon.send({ embeds: [embed] });
+      }
       storage.updatePanel(interaction.guild.id, panel.id, { messageId: msg.id, channelId: salonId });
-    } else {
-      const msg = await salon.send({ embeds: [embed] });
-      storage.updatePanel(interaction.guild.id, panel.id, { messageId: msg.id, channelId: salonId });
+      await interaction.followUp({ content: `✅ Panel envoye dans ${salon}.`, ephemeral: true });
+    } catch (e) {
+      await interaction.followUp({ content: `❌ Erreur envoi : ${e}`, ephemeral: true });
     }
-    await interaction.editReply({ content: `Panel envoye dans ${salon}.` });
     return;
   }
 
