@@ -4,7 +4,6 @@ import * as path from 'path';
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const ADMIN = PermissionFlagsBits.Administrator;
-const MOD = PermissionFlagsBits.ModerateMembers;
 
 const commands = [
   // Generales (publiques)
@@ -24,7 +23,7 @@ const commands = [
     .addSubcommand(sub => sub.setName('arrivee').setDescription('Config arrivee').addChannelOption(o => o.setName('salon').setDescription('Salon').setRequired(true)).addStringOption(o => o.setName('message').setDescription('Message')))
     .addSubcommand(sub => sub.setName('depart').setDescription('Config depart').addChannelOption(o => o.setName('salon').setDescription('Salon').setRequired(true)).addStringOption(o => o.setName('message').setDescription('Message'))),
 
-  // Moderation (mod)
+  // Moderation (admin)
   new SlashCommandBuilder().setName('bannir').setDescription('Bannir').setDefaultMemberPermissions(ADMIN).addUserOption(o => o.setName('utilisateur').setDescription('Utilisateur').setRequired(true)).addStringOption(o => o.setName('raison').setDescription('Raison').setRequired(true)).addIntegerOption(o => o.setName('messages').setDescription('Messages a supprimer')),
   new SlashCommandBuilder().setName('debannir').setDescription('Debannir').setDefaultMemberPermissions(ADMIN).addStringOption(o => o.setName('utilisateur-id').setDescription('ID').setRequired(true)).addStringOption(o => o.setName('raison').setDescription('Raison').setRequired(true)),
   new SlashCommandBuilder().setName('expulser').setDescription('Expulser').setDefaultMemberPermissions(ADMIN).addUserOption(o => o.setName('utilisateur').setDescription('Utilisateur').setRequired(true)).addStringOption(o => o.setName('raison').setDescription('Raison').setRequired(true)),
@@ -66,6 +65,16 @@ const commands = [
   new SlashCommandBuilder().setName('nuke').setDescription('Recreer le salon').setDefaultMemberPermissions(ADMIN),
   // Server-banner (admin)
   new SlashCommandBuilder().setName('server-banner').setDescription('Changer banniere').setDefaultMemberPermissions(ADMIN).addStringOption(o => o.setName('url').setDescription('URL image').setRequired(true)),
+
+  // Ticket (admin)
+  new SlashCommandBuilder().setName('ticket').setDescription('Systeme de tickets').setDefaultMemberPermissions(ADMIN)
+    .addSubcommand(sub => sub.setName('panel').setDescription('Creer panel').addChannelOption(o => o.setName('salon').setDescription('Salon').setRequired(true)).addStringOption(o => o.setName('categorie-id').setDescription('ID categorie').setRequired(true)).addStringOption(o => o.setName('titre').setDescription('Titre')).addStringOption(o => o.setName('description').setDescription('Description')).addStringOption(o => o.setName('couleur').setDescription('Couleur hex')).addStringOption(o => o.setName('emoji').setDescription('Emoji')))
+    .addSubcommand(sub => sub.setName('categorie').setDescription('Creer categorie').addChannelOption(o => o.setName('categorie').setDescription('Categorie Discord').setRequired(true)).addRoleOption(o => o.setName('role-staff').setDescription('Role staff').setRequired(true)).addStringOption(o => o.setName('nom').setDescription('Nom')))
+    .addSubcommand(sub => sub.setName('config').setDescription('Voir config'))
+    .addSubcommand(sub => sub.setName('logs').setDescription('Voir tickets recents'))
+    .addSubcommand(sub => sub.setName('fermer').setDescription('Fermer le ticket'))
+    .addSubcommand(sub => sub.setName('supprimer').setDescription('Supprimer le ticket'))
+    .addSubcommand(sub => sub.setName('renvoyer').setDescription('Renvoyer le panel')),
 
   // Vocal (admin)
   new SlashCommandBuilder().setName('rejoindre').setDescription('Rejoindre salon vocal').setDefaultMemberPermissions(ADMIN).addChannelOption(o => o.setName('salon').setDescription('Salon vocal').setRequired(true)),

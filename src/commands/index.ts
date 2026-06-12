@@ -490,9 +490,81 @@ commandHandler.register({
   }
 });
 
-// ENREGISTREMENT DES COMMANDES MODERATION
-for (const cmd of modCmds) {
-  commandHandler.register({ data: { name: cmd.name }, execute: cmd.fn });
-}
+// ====== TICKET ======
+commandHandler.register({
+  data: { name: 'ticket' },
+  async execute(i) {
+    if (!i.guild) return;
+    const sub = i.options.getSubcommand();
+    if (sub === 'panel') {
+      // Creer un panel de tickets
+      const salon = i.options.getChannel('salon', true);
+      const categorieId = i.options.getString('categorie-id', true);
+      const titre = i.options.getString('titre') || 'Support';
+      const description = i.options.getString('description') || 'Cliquez pour ouvrir un ticket.';
+      const couleur = i.options.getString('couleur') || '#5865f2';
+      const emoji = i.options.getString('emoji') || '🎫';
+      const panelId = uuidv4();
+      const embed = new EmbedBuilder().setColor(parseInt(couleur.replace('#', ''), 16)).setTitle(`${emoji} ${titre}`).setDescription(description).setFooter({ text: `Panel: ${titre}` }).setTimestamp();
+      const btn = new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId(`ticket_open_${panelId}`).setLabel('Ouvrir un ticket').setStyle(ButtonStyle.Primary));
+      const ch = salon as any;
+      if (!ch?.send) { await i.reply({ content: 'Salon invalide.', ephemeral: true }); return; }
+      const msg = await ch.send({ embeds: [embed], components: [btn] });
+      storage.createPanel(i.guild.id, { id: panelId, guildId: i.guild.id, nom: titre, messageId: msg.id, channelId: salon.id, categorieId, couleur, titre, description, emoji, boutonLibelle: 'Ouvrir un ticket', formulaireId: null, dateCreation: Date.now() });
+      await i.reply({ content: `Panel cree dans ${salon}.`, ephemeral: true });
+    } else if (sub === 'categorie') {
+      // Creer une categorie
+      const cat = i.options.getChannel('categorie', true);
+      const roleStaff = i.options.getRole('role-staff', true);
+      const nom = i.options.getString('nom') || 'Support';
+      if ((cat as any).type !== 4) { await i.reply({ content: 'Ce n\'est pas une categorie.', ephemeral: true }); return; }
+      const catId = uuidv4();
+      storage.createCategory(i.guild.id, { id: catId, guildId: i.guild.id, nom, categorieDiscordId: cat.id, roleStaffId: roleStaff.id, salonLogsId: null, messageOuverture: `Bienvenue dans votre ticket **${nom}**.`, formulaireId: null, transcriptActif: true, dateCreation: Date.now() });
+      await i.reply({ content: `Categorie "${nom}" creee avec le role ${roleStaff}.`, ephemeral: true });
+    } else if (sub === 'config') {
+      const categories = storage.getCategories(i.guild.id);
+      const panels = storage.getPanels(i.guild.id);
+      const tickets = storage.getTickets(i.guild.id);
+      const embed = new EmbedBuilder().setColor(0x5865f2).setTitle('Configuration des tickets').addFields(
+        { name: 'Categories', value: `${categories.length}`, inline: true },
+        { name: 'Panels', value: `${panels.length}`, inline: true },
+        { name: 'Tickets ouverts', value: `${tickets.filter(t => t.statut === 'ouvert').length}`, inline: true },
+        { name: 'Tickets totaux', value: `${tickets.length}`, inline: true }
+      );
+      if (categories.length > 0) embed.addFields({ name: 'Categories', value: categories.map(c => `• **${c.nom}** - <#${c.categorieDiscordId}>`).join('\n') });
+      await i.reply({ embeds: [embed], ephemeral: true });
+    } else if (sub === 'logs') {
+      const tickets = storage.getTickets(i.guild.id).slice(-10).reverse();
+      if (tickets.length === 0) { await i.reply({ content: 'Aucun ticket recent.', ephemeral: true }); return; }
+      const embed = new EmbedBuilder().setColor(0x5865f2).setTitle('Derniers tickets').setDescription(tickets.map(t => `**${t.sujet || 'Ticket'}** - <@${t.createurId}> - ${t.statut === 'ouvert' ? 'Ouvert' : 'Ferme'}`).join('\n'));
+      await i.reply({ embeds: [embed], ephemeral: true });
+    } else if (sub === 'fermer') {
+      const ticket = storage.getTicket(i.guild.id, i.channelId);
+      if (!ticket) { await i.reply({ content: 'Ce salon n\'est pas un ticket.', ephemeral: true }); return; }
+      storage.updateTicket(i.guild.id, i.channelId, { statut: 'ferme', dateFermeture: Date.now() });
+      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId(`ticket_delete_${i.channelId}`).setLabel('Supprimer').setStyle(ButtonStyle.Danger), new ButtonBuilder().setCustomId(`ticket_reopen_${i.channelId}`).setLabel('Reouvrir').setStyle(ButtonStyle.Success));
+      await i.reply({ content: 'Ticket ferme.', components: [row] });
+    } else if (sub === 'supprimer') {
+      storage.deleteTicket(i.guild.id, i.channelId);
+      await i.reply({ content: 'Ticket supprime.' });
+      setTimeout(async () => { try { await (i.channel as any)?.delete(); } catch {} }, 2000);
+    } else if (sub === 'renvoyer') {
+      const msg = i.options.getString('message') || 'Panel de tickets';
+      const panels = storage.getPanels(i.guild.id);
+      if (panels.length === 0) { await i.reply({ content: 'Aucun panelconfigure.', ephemeral: true }); return; }
+      const p = panels[0];
+      const ch = i.guild.channels.cache.get(p.channelId) as any;
+      if (!ch?.send) { await i.reply({ content: 'Salon introuvable.', ephemeral: true }); return; }
+      const embed = new EmbedBuilder().setColor(parseInt(p.couleur.replace('#', ''), 16)).setTitle(`${p.emoji} ${p.titre}`).setDescription(p.description).setFooter({ text: `Panel: ${p.nom}` }).setTimestamp();
+      const btn = new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId(`ticket_open_${p.id}`).setLabel('Ouvrir un ticket').setStyle(ButtonStyle.Primary));
+      await ch.send({ embeds: [embed], components: [btn] });
+      await i.reply({ content: 'Panel renvoye.', ephemeral: true });
+    }
+  }
+});
+
+// ====== GESTION DES BOUTONS TICKET (via router) ======
+// Les boutons ticket_open_ sont geres dans router.ts
+// On ajoute ici le handler pour ticket_delete_ et ticket_reopen_
 
 logger.info('Commandes enregistrees', 'Commands');
