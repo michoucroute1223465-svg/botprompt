@@ -238,9 +238,10 @@ export async function routeButton(interaction: any) {
   }
 
   if (id === 'ticket_select_salon') {
+    const saloncache = interaction.values[0];
     await interaction.deferUpdate();
     const { storage } = await import('./utils/storage');
-    const salonId = interaction.values[0];
+    const salonId = saloncache;
     const salon = interaction.guild.channels.cache.get(salonId) as any;
     if (!salon?.send) { await interaction.editReply({ content: 'Salon invalide.' }); return; }
     const panels = storage.getPanels(interaction.guild.id);
