@@ -1,4 +1,4 @@
-import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from 'discord.js';
 
 export function createMainMenu(guildName: string) {
   const embed = new EmbedBuilder()
@@ -184,6 +184,140 @@ export async function routeButton(interaction: any) {
     c.participants.push(interaction.user.id);
     storage.updateConcours(interaction.guild.id, concoursId, { participants: c.participants });
     await interaction.reply({ content: 'Participation enregistree.', ephemeral: true });
+    return;
+  }
+
+  // ====== TICKET CONFIG BUTTONS ======
+  if (id === 'ticket_cfg_titre') {
+    const modal = new ModalBuilder().setCustomId('ticket_modal_titre').setTitle('Titre du panel');
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('titre').setLabel('Titre du panel').setStyle(TextInputStyle.Short).setRequired(true)) as any);
+    await interaction.showModal(modal);
+    return;
+  }
+
+  if (id === 'ticket_cfg_logo') {
+    const modal = new ModalBuilder().setCustomId('ticket_modal_logo').setTitle('Logo du panel');
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('logo').setLabel('URL de l\'image').setStyle(TextInputStyle.Short).setRequired(true)) as any);
+    await interaction.showModal(modal);
+    return;
+  }
+
+  if (id === 'ticket_cfg_description') {
+    const modal = new ModalBuilder().setCustomId('ticket_modal_description').setTitle('Description du panel');
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('description').setLabel('Description').setPlaceholder('{tickets_ouverts} {tickets_fermes} {motifs}').setStyle(TextInputStyle.Paragraph).setRequired(true)) as any);
+    await interaction.showModal(modal);
+    return;
+  }
+
+  if (id === 'ticket_cfg_ajouter_motif') {
+    const modal = new ModalBuilder().setCustomId('ticket_modal_motif').setTitle('Ajouter un motif');
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('nom').setLabel('Nom du motif').setStyle(TextInputStyle.Short).setRequired(true)) as any);
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('emoji').setLabel('Emoji').setStyle(TextInputStyle.Short).setRequired(true)) as any);
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('message').setLabel('Message d\'ouverture').setPlaceholder('{utilisateur} {motif} {nombre}').setStyle(TextInputStyle.Paragraph).setRequired(true)) as any);
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('ping').setLabel('Role a ping (ID)').setStyle(TextInputStyle.Short).setRequired(false)) as any);
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('categorie').setLabel('Categorie Discord (ID)').setStyle(TextInputStyle.Short).setRequired(true)) as any);
+    await interaction.showModal(modal);
+    return;
+  }
+
+  if (id === 'ticket_cfg_envoyer') {
+    const channels = interaction.guild.channels.cache.filter((c: any) => c.type === 0).map((c: any) => new StringSelectMenuOptionBuilder().setLabel(c.name).setValue(c.id)).slice(0, 25);
+    if (channels.length === 0) { await interaction.reply({ content: 'Aucun salon textuel.', ephemeral: true }); return; }
+    const select = new StringSelectMenuBuilder().setCustomId('ticket_select_salon').setPlaceholder('Choisir le salon du panel').addOptions(channels);
+    await interaction.reply({ components: [new ActionRowBuilder().addComponents(select)], ephemeral: true });
+    return;
+  }
+
+  if (id === 'ticket_select_salon') {
+    const { storage } = await import('./utils/storage');
+    const salonId = interaction.values[0];
+    const salon = interaction.guild.channels.cache.get(salonId) as any;
+    if (!salon?.send) { await interaction.reply({ content: 'Salon invalide.', ephemeral: true }); return; }
+    const panels = storage.getPanels(interaction.guild.id);
+    const panel = panels[0];
+    if (!panel) { await interaction.reply({ content: 'Aucun panel.', ephemeral: true }); return; }
+    const tickets = storage.getTickets(interaction.guild.id);
+    const ouverts = tickets.filter((t: any) => t.statut === 'ouvert').length;
+    const fermes = tickets.filter((t: any) => t.statut === 'ferme').length;
+    const motifListe = panel.motifs.length > 0 ? panel.motifs.map((m: any) => `• ${m.emoji} ${m.nom}`).join('\n') : '*Aucun motif*';
+    let desc = panel.description.replace(/{tickets_ouverts}/g, String(ouverts)).replace(/{tickets_fermes}/g, String(fermes)).replace(/{motifs}/g, motifListe);
+    const embed = new EmbedBuilder()
+      .setColor(parseInt(panel.couleur.replace('#', ''), 16) || 0x5865f2)
+      .setTitle(`${panel.emoji} ${panel.titre}`)
+      .setDescription(desc)
+      .addFields(
+        { name: 'Motifs disponibles', value: `${panel.motifs.length}`, inline: true },
+        { name: 'Tickets ouverts', value: `${ouverts}`, inline: true },
+        { name: 'Tickets fermes', value: `${fermes}`, inline: true },
+        { name: 'Motifs', value: motifListe, inline: false }
+      )
+      .setTimestamp();
+    if (panel.logoUrl) embed.setThumbnail(panel.logoUrl);
+    const select = new StringSelectMenuBuilder().setCustomId(`ticket_open_${panel.id}`).setPlaceholder('Selectionnez un motif').addOptions(panel.motifs.map((m: any) => new StringSelectMenuOptionBuilder().setLabel(m.nom).setValue(m.id).setEmoji(m.emoji)));
+    const msg = await salon.send({ embeds: [embed], components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)] });
+    storage.updatePanel(interaction.guild.id, panel.id, { messageId: msg.id, channelId: salonId });
+    await interaction.reply({ content: `Panel envoye dans ${salon}.`, ephemeral: true });
+    return;
+  }
+
+  // ====== TICKET OPEN (menu deroulant) ======
+  if (id.startsWith('ticket_open_')) {
+    const { storage } = await import('./utils/storage');
+    const { v4: uuidv4 } = await import('uuid');
+    const panelId = id.replace('ticket_open_', '');
+    const panel = storage.getPanel(interaction.guild.id, panelId);
+    if (!panel) { await interaction.reply({ content: 'Panel introuvable.', ephemeral: true }); return; }
+    const motifId = interaction.values[0];
+    const motif = panel.motifs.find((m: any) => m.id === motifId);
+    if (!motif) { await interaction.reply({ content: 'Motif introuvable.', ephemeral: true }); return; }
+    const tickets = storage.getTickets(interaction.guild.id);
+    const nombre = tickets.length + 1;
+    const nomSalon = motif.formatNomSalon.replace(/{nombre}/g, String(nombre).padStart(3, '0')).replace(/{utilisateur}/g, interaction.user.username).replace(/{motif}/g, motif.nom);
+    const categorie = interaction.guild.channels.cache.get(motif.categorieId) as any;
+    if (!categorie) { await interaction.reply({ content: 'Categorie introuvable.', ephemeral: true }); return; }
+    const salon = await interaction.guild.channels.create({ name: nomSalon, type: 0, parent: motif.categorieId, permissionOverwrites: [{ id: interaction.guild.id, deny: ['ViewChannel'] }, { id: interaction.user.id, allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory'] }] });
+    const ticketId = uuidv4();
+    storage.createTicket(interaction.guild.id, { id: ticketId, guildId: interaction.guild.id, channelId: salon.id, categorieId: motif.categorieId, panelId: panel.id, createurId: interaction.user.id, membreIds: [interaction.user.id], statut: 'ouvert', priorite: 'normale', sujet: motif.nom, formulaireId: null, reponsesFormulaire: [], dateCreation: Date.now(), dateFermeture: null, fermePar: null, transcriptId: null, categoryName: motif.nom });
+    storage.incrementStats(interaction.guild.id, 'totalTickets');
+    const msg = motif.messageOuverture.replace(/{utilisateur}/g, `<@${interaction.user.id}>`).replace(/{motif}/g, motif.nom).replace(/{nombre}/g, String(nombre).padStart(3, '0'));
+    const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = await import('discord.js');
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId(`ticket_close_${salon.id}`).setLabel('Fermer le ticket').setStyle(ButtonStyle.Danger));
+    await salon.send({ content: msg + (motif.pingRoleId ? ` <@&${motif.pingRoleId}>` : ''), components: [row] });
+    await interaction.reply({ content: `Ticket ouvert: ${salon}`, ephemeral: true });
+    return;
+  }
+
+  // ====== TICKET CLOSE ======
+  if (id.startsWith('ticket_close_')) {
+    const { storage } = await import('./utils/storage');
+    const channelId = id.replace('ticket_close_', '');
+    const ticket = storage.getTicket(interaction.guild.id, channelId);
+    if (!ticket) { await interaction.reply({ content: 'Ce salon n\'est pas un ticket.', ephemeral: true }); return; }
+    storage.updateTicket(interaction.guild.id, channelId, { statut: 'ferme', dateFermeture: Date.now() });
+    const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = await import('discord.js');
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId(`ticket_delete_${channelId}`).setLabel('Supprimer').setStyle(ButtonStyle.Danger), new ButtonBuilder().setCustomId(`ticket_reopen_${channelId}`).setLabel('Reouvrir').setStyle(ButtonStyle.Success));
+    await interaction.reply({ content: 'Ticket ferme.', components: [row] });
+    return;
+  }
+
+  // ====== TICKET DELETE ======
+  if (id.startsWith('ticket_delete_')) {
+    const { storage } = await import('./utils/storage');
+    const channelId = id.replace('ticket_delete_', '');
+    storage.deleteTicket(interaction.guild.id, channelId);
+    await interaction.reply({ content: 'Ticket supprime.' });
+    setTimeout(async () => { try { await (interaction.channel as any)?.delete(); } catch {} }, 2000);
+    return;
+  }
+
+  // ====== TICKET REOPEN ======
+  if (id.startsWith('ticket_reopen_')) {
+    const { storage } = await import('./utils/storage');
+    const channelId = id.replace('ticket_reopen_', '');
+    const ticket = storage.getTicket(interaction.guild.id, channelId);
+    if (!ticket) { await interaction.reply({ content: 'Ticket introuvable.', ephemeral: true }); return; }
+    storage.updateTicket(interaction.guild.id, channelId, { statut: 'ouvert', dateFermeture: null });
+    await interaction.reply({ content: 'Ticket reouvert.' });
     return;
   }
 }

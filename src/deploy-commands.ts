@@ -68,13 +68,10 @@ const commands = [
 
   // Ticket (admin)
   new SlashCommandBuilder().setName('ticket').setDescription('Systeme de tickets').setDefaultMemberPermissions(ADMIN)
-    .addSubcommand(sub => sub.setName('panel').setDescription('Creer panel').addChannelOption(o => o.setName('salon').setDescription('Salon').setRequired(true)).addStringOption(o => o.setName('categorie-id').setDescription('ID categorie').setRequired(true)).addStringOption(o => o.setName('titre').setDescription('Titre')).addStringOption(o => o.setName('description').setDescription('Description')).addStringOption(o => o.setName('couleur').setDescription('Couleur hex')).addStringOption(o => o.setName('emoji').setDescription('Emoji')))
-    .addSubcommand(sub => sub.setName('categorie').setDescription('Creer categorie').addChannelOption(o => o.setName('categorie').setDescription('Categorie Discord').setRequired(true)).addRoleOption(o => o.setName('role-staff').setDescription('Role staff').setRequired(true)).addStringOption(o => o.setName('nom').setDescription('Nom')))
-    .addSubcommand(sub => sub.setName('config').setDescription('Voir config'))
-    .addSubcommand(sub => sub.setName('logs').setDescription('Voir tickets recents'))
+    .addSubcommand(sub => sub.setName('config').setDescription('Configurer les tickets'))
     .addSubcommand(sub => sub.setName('fermer').setDescription('Fermer le ticket'))
     .addSubcommand(sub => sub.setName('supprimer').setDescription('Supprimer le ticket'))
-    .addSubcommand(sub => sub.setName('renvoyer').setDescription('Renvoyer le panel')),
+    .addSubcommand(sub => sub.setName('logs').setDescription('Voir tickets recents')),
 
   // Vocal (admin)
   new SlashCommandBuilder().setName('rejoindre').setDescription('Rejoindre salon vocal').setDefaultMemberPermissions(ADMIN).addChannelOption(o => o.setName('salon').setDescription('Salon vocal').setRequired(true)),

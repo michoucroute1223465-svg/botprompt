@@ -28,19 +28,28 @@ export interface ActiviteConfig {
 // TYPES DE TICKETS
 // ==============================
 
+export interface TicketMotif {
+  id: string;
+  nom: string;
+  emoji: string;
+  messageOuverture: string;
+  pingRoleId: string | null;
+  categorieId: string;
+  formatNomSalon: string;
+}
+
 export interface TicketPanel {
   id: string;
   guildId: string;
   nom: string;
-  messageId: string;
-  channelId: string;
-  categorieId: string;
-  couleur: string;
+  messageId: string | null;
+  channelId: string | null;
   titre: string;
   description: string;
   emoji: string;
-  boutonLibelle: string;
-  formulaireId: string | null;
+  logoUrl: string | null;
+  couleur: string;
+  motifs: TicketMotif[];
   dateCreation: number;
 }
 
